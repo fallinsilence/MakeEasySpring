@@ -1,58 +1,28 @@
 package org.litespring.beans.factory.support;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 import org.litespring.beans.BeanDefinition;
-import org.litespring.beans.BeansException;
 import org.litespring.beans.factory.BeanCreatingException;
-import org.litespring.beans.factory.BeanDefinitionStoreException;
-import org.litespring.beans.factory.BeanFactory;
+import org.litespring.beans.factory.config.ConfigurableBeanFactory;
 import org.litespring.utils.ClassUtils;
 
-import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DefaultBeanFactory implements BeanFactory {
+
+/**
+ * 缺省的BeanFactory类
+ */
+public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements ConfigurableBeanFactory, BeanDefinitionRegistry {
 
     private final String BEAN_ID = "id";
     private final String BEAN_CLASSNAME = "class";
 
+    private ClassLoader beanClassLoader;
     private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
 
-    public DefaultBeanFactory(String configFile) {
-        loadBeanDefinition(configFile);
-    }
-
-    private void loadBeanDefinition(String configFile) {
-        InputStream inputStream;
-
-        try{
-            ClassLoader c1 = ClassUtils.getDefaultClassLoader();
-            inputStream = c1.getResourceAsStream(configFile);
-
-            SAXReader reader = new SAXReader();
-            Document document = reader.read(inputStream);
-
-            //beans
-            Element rootElement = document.getRootElement();
-            Iterator elementIterator = rootElement.elementIterator();
-
-            while (elementIterator.hasNext()){
-                Element element = (Element) elementIterator.next();
-                String id = element.attributeValue(BEAN_ID);
-                String beanClassName = element.attributeValue(BEAN_CLASSNAME);
-                BeanDefinition definition = new GenericBeanFactory(id, beanClassName);
-
-                this.beanDefinitionMap.put(id, definition);
-            }
-
-        } catch (DocumentException e) {
-            throw new BeanDefinitionStoreException("parse xml occurs exception" + configFile, e);
-        }
+    @Override
+    public void registerBeanDefinition(String beanId, BeanDefinition beanDefinition) {
+        this.beanDefinitionMap.put(beanId, beanDefinition);
     }
 
     @Override
@@ -67,6 +37,21 @@ public class DefaultBeanFactory implements BeanFactory {
         if (beanDefinition == null)
             throw new BeanCreatingException("Bean Definition does not exist");
 
+        if (beanDefinition.isSingleton()){
+            Object bean = this.getSingleton(beanId);
+            if (bean == null){
+                bean = createBean(beanDefinition);
+                this.registerSingleton(beanId, bean);
+            }
+            return bean;
+
+        }
+
+        return createBean(beanDefinition);
+
+    }
+
+    private Object createBean(BeanDefinition beanDefinition){
         ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
         String beanClassName = beanDefinition.getBeanClassName();
 
@@ -78,6 +63,14 @@ public class DefaultBeanFactory implements BeanFactory {
         } catch (Exception e){
             throw new BeanCreatingException("creating bean " + beanClassName + "occurs exception");
         }
-
     }
+
+    public void setBeanClassLoader(ClassLoader beanClassLoader) {
+        this.beanClassLoader = beanClassLoader;
+    }
+
+    public ClassLoader getBeanClassLoader() {
+        return (this.beanClassLoader != null ? this.beanClassLoader : ClassUtils.getDefaultClassLoader());
+    }
+
 }

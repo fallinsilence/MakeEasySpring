@@ -7,6 +7,8 @@
 
     <bean id="petStore" class="org.litespring.service.v1.PetStoreService"/>
 
-    <bean id="invalidBean" class="xxx.xxx"/>
+    <bean id="petStore2" class="org.litespring.service.v1.PetStoreService" scope="prototype"/>
+
+    <bean id="invalidBean" class="xxx.xxx" />
 
 </beans>
