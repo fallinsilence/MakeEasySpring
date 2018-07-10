@@ -26,10 +26,12 @@ public abstract class AbstractApplicationContext implements ApplicationContext {
     protected abstract Resource getResourceByPath(String path);
 
 
+    @Override
     public void setBeanClassLoader(ClassLoader beanClassLoader) {
         this.beanClassLoader = beanClassLoader;
     }
 
+    @Override
     public ClassLoader getBeanClassLoader() {
         return (this.beanClassLoader != null ? this.beanClassLoader : ClassUtils.getDefaultClassLoader());
     }

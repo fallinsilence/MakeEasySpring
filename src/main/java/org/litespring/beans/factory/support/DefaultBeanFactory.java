@@ -34,8 +34,9 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
     public Object getBean(String beanId) {
         BeanDefinition beanDefinition = getBeanDefinition(beanId);
 
-        if (beanDefinition == null)
+        if (beanDefinition == null) {
             throw new BeanCreatingException("Bean Definition does not exist");
+        }
 
         if (beanDefinition.isSingleton()){
             Object bean = this.getSingleton(beanId);
@@ -65,10 +66,12 @@ public class DefaultBeanFactory extends DefaultSingletonBeanRegistry implements 
         }
     }
 
+    @Override
     public void setBeanClassLoader(ClassLoader beanClassLoader) {
         this.beanClassLoader = beanClassLoader;
     }
 
+    @Override
     public ClassLoader getBeanClassLoader() {
         return (this.beanClassLoader != null ? this.beanClassLoader : ClassUtils.getDefaultClassLoader());
     }
